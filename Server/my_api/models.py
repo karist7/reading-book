@@ -1,23 +1,17 @@
-from fileinput import filename
-
-from django.core.files.storage import FileSystemStorage
+mport os
 from django.db import models
-import os
-from django.conf import settings
+from .storages import FixedNameOverwriteStorage
 
-def date_upload_to(instance, filename):
-  extension = os.path.splitext(filename)[-1].lower()
-  if (os.path.isfile(os.path.join(settings.MEDIA_ROOT, 'uploads', 'image'+extension))):
-    os.remove(os.path.join(settings.MEDIA_ROOT, 'uploads', 'image'+extension))
-  path = 'uploads'
-  imageName = "image"
-  # 확장자 추출
-  # 결합 후 return
-  return '/'.join([
-    path,
-    imageName + extension,
-  ])
-
+def upload_to(instance, filename: str) -> str:
+    ext = os.path.splitext(filename)[1].lower() or '.jpg'
+    # 항상 uploads/image.<확장자> 로 저장
+    return f'uploads/image{ext}'
 
 class Page(models.Model):
-  image = models.ImageField(upload_to=date_upload_to)
+    #필드명 항상 IMAGE로 저장
+    image = models.ImageField(
+        upload_to=upload_to,
+        storage=FileStorage(),
+        blank=False,
+        null=False,
+    )
